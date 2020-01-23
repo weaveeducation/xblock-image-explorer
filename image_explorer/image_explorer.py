@@ -54,6 +54,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
 
     has_score = True
     completion_mode = XBlockCompletionMode.COMPLETABLE
+    has_author_view = True
 
     display_name = String(
         display_name=_("Display Name"),
@@ -131,6 +132,10 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
         schema_version = int(xmltree.attrib.get('schema_version', 1))
 
         return schema_version > 1
+
+    @XBlock.supports("multi_device")  # Mark as mobile-friendly
+    def author_view(self, context):
+        return self.student_view(context)
 
     @XBlock.supports("multi_device")  # Mark as mobile-friendly
     def student_view(self, context):
