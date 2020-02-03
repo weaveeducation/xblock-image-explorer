@@ -237,6 +237,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
                 data['grade'] = percent_completion
                 data['max_grade'] = 1
                 data['first_open'] = opened_hotspots_cnt == 1
+                data['opened_hotspots'] = self.opened_hotspots
 
         self.runtime.publish(self, event_type, data)
 
