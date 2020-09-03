@@ -262,7 +262,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
 
         self.runtime.publish(self, 'progress', {})
         self.opened_hotspots.append(hotspot_id)
-        log.debug(u'Opened hotspots so far for %s: %s', self._get_unique_id(), self.opened_hotspots)
+        log.debug('Opened hotspots so far for %s: %s', self._get_unique_id(), self.opened_hotspots)
 
         opened_hotspots = [h for h in hotspots_ids if h in self.opened_hotspots]
         percent_completion = float(len(opened_hotspots)) / len(hotspots_ids)
@@ -270,7 +270,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
             'value': percent_completion,
             'max_value': 1,
         })
-        log.debug(u'Sending grade for %s: %s', self._get_unique_id(), percent_completion)
+        log.debug('Sending grade for %s: %s', self._get_unique_id(), percent_completion)
 
         return True, percent_completion, len(opened_hotspots)
 
@@ -364,7 +364,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
         Helper met
         """
         if tag is not None:
-            tag_content = u''.join(html.tostring(e) for e in tag)
+            tag_content = ''.join(html.tostring(e).decode('utf-8') for e in tag)
             if absolute_urls:
                 return self._change_relative_url_to_absolute(tag_content)
             return tag_content
