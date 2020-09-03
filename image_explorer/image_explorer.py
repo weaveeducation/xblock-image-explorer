@@ -233,10 +233,18 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
 
         data['user_id'] = self.scope_ids.user_id
         data['component_id'] = self._get_unique_id()
-        self.runtime.publish(self, event_type, data)
 
         if event_type == 'xblock.image-explorer.hotspot.opened':
-            self.register_progress(data['item_id'])
+            new_grade, percent_completion, opened_hotspots_cnt = self.register_progress(data['item_id'])
+            data['new_grade'] = new_grade
+            if new_grade:
+                data['new_grade'] = new_grade
+                data['grade'] = percent_completion
+                data['max_grade'] = 1
+                data['first_open'] = opened_hotspots_cnt == 1
+                data['opened_hotspots'] = self.opened_hotspots
+
+        self.runtime.publish(self, event_type, data)
 
         return {'result': 'success'}
 
@@ -250,7 +258,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
         if not hotspots_ids \
                 or hotspot_id not in hotspots_ids \
                 or hotspot_id in self.opened_hotspots:
-            return
+            return False, None, None
 
         self.runtime.publish(self, 'progress', {})
         self.opened_hotspots.append(hotspot_id)
@@ -263,6 +271,8 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
             'max_value': 1,
         })
         log.debug(u'Sending grade for %s: %s', self._get_unique_id(), percent_completion)
+
+        return True, percent_completion, len(opened_hotspots)
 
     def _get_unique_id(self):
         try:
