@@ -186,7 +186,6 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
                 i18n_service=self.runtime.service(self, 'i18n')
             )
         )
-        hotspot_image_url = self.runtime.local_resource_url(self, 'public/images/hotspot-sprite.png')
         fragment.add_css(self.resource_string('public/css/image_explorer.css'))
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/image_explorer.js'))
         if has_youtube:
@@ -198,8 +197,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
             )
             fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/ooyala_player.js'))
 
-        fragment.initialize_js('ImageExplorerBlock', {'hotspot_image': hotspot_image_url,
-                                                      'authoring_view': 'true' if authoring else 'false'})
+        fragment.initialize_js('ImageExplorerBlock', {'authoring_view': 'true' if authoring else 'false'})
 
         return fragment
 
