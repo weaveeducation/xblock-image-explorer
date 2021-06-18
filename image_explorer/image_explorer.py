@@ -186,7 +186,6 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
                 i18n_service=self.runtime.service(self, 'i18n')
             )
         )
-        hotspot_image_url = self.runtime.local_resource_url(self, 'public/images/hotspot-sprite.png')
         fragment.add_css(self.resource_string('public/css/image_explorer.css'))
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/image_explorer.js'))
         if has_youtube:
@@ -198,8 +197,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
             )
             fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/ooyala_player.js'))
 
-        fragment.initialize_js('ImageExplorerBlock', {'hotspot_image': hotspot_image_url,
-                                                      'authoring_view': 'true' if authoring else 'false'})
+        fragment.initialize_js('ImageExplorerBlock', {'authoring_view': 'true' if authoring else 'false'})
 
         return fragment
 
@@ -233,10 +231,18 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
 
         data['user_id'] = self.scope_ids.user_id
         data['component_id'] = self._get_unique_id()
-        self.runtime.publish(self, event_type, data)
 
         if event_type == 'xblock.image-explorer.hotspot.opened':
-            self.register_progress(data['item_id'])
+            new_grade, percent_completion, opened_hotspots_cnt = self.register_progress(data['item_id'])
+            data['new_grade'] = new_grade
+            if new_grade:
+                data['new_grade'] = new_grade
+                data['grade'] = percent_completion
+                data['max_grade'] = 1
+                data['first_open'] = opened_hotspots_cnt == 1
+                data['opened_hotspots'] = self.opened_hotspots
+
+        self.runtime.publish(self, event_type, data)
 
         return {'result': 'success'}
 
@@ -250,11 +256,11 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
         if not hotspots_ids \
                 or hotspot_id not in hotspots_ids \
                 or hotspot_id in self.opened_hotspots:
-            return
+            return False, None, None
 
         self.runtime.publish(self, 'progress', {})
         self.opened_hotspots.append(hotspot_id)
-        log.debug(u'Opened hotspots so far for %s: %s', self._get_unique_id(), self.opened_hotspots)
+        log.debug('Opened hotspots so far for %s: %s', self._get_unique_id(), self.opened_hotspots)
 
         opened_hotspots = [h for h in hotspots_ids if h in self.opened_hotspots]
         percent_completion = float(len(opened_hotspots)) / len(hotspots_ids)
@@ -262,7 +268,9 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
             'value': percent_completion,
             'max_value': 1,
         })
-        log.debug(u'Sending grade for %s: %s', self._get_unique_id(), percent_completion)
+        log.debug('Sending grade for %s: %s', self._get_unique_id(), percent_completion)
+
+        return True, percent_completion, len(opened_hotspots)
 
     def _get_unique_id(self):
         try:
@@ -333,7 +341,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
         if not url:
             return url
         try:
-            from static_replace import replace_static_urls
+            from common.djangoapps.static_replace import replace_static_urls
         except ImportError:
             return url
 
@@ -354,7 +362,7 @@ class ImageExplorerBlock(XBlock):  # pylint: disable=no-init
         Helper met
         """
         if tag is not None:
-            tag_content = ''.join([ html.tostring(e, encoding=str) for e in tag ])
+            tag_content = ''.join([html.tostring(e, encoding=str) for e in tag])
             if absolute_urls:
                 return self._change_relative_url_to_absolute(tag_content)
             return tag_content
