@@ -38,8 +38,8 @@ from django.conf import settings
 
 from xblock.completable import XBlockCompletionMode
 from xblock.core import XBlock
-from xblock.fragment import Fragment
 from xblock.fields import List, Scope, String, Boolean
+from web_fragments.fragment import Fragment
 
 from .utils import loader, AttrDict, _
 
